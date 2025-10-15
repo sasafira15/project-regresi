@@ -26,6 +26,9 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get('data/edit/(:num)', 'AdminController::edit/$1');
     $routes->post('data/update/(:num)', 'AdminController::update/$1');
     $routes->get('data/delete/(:num)', 'AdminController::delete/$1');
+    $routes->post('mesin/tambah', 'AdminController::tambahMesin');
+    $routes->get('mesin/hapus/(:num)', 'AdminController::hapusMesin/$1');
+    $routes->post('laporan/download/mingguan', 'AdminController::downloadLaporanMingguan');
 });
 
 

@@ -39,6 +39,7 @@ class Autoload extends AutoloadConfig
      */
     public $psr4 = [
         APP_NAMESPACE => APPPATH,
+        'Phpml\\'         => APPPATH . '../vendor/php-ai/php-ml/src',
     ];
 
     /**
@@ -75,7 +76,9 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $files = [];
+    public $files = [
+        FCPATH . '../vendor/autoload.php',
+    ];
 
     /**
      * -------------------------------------------------------------------
