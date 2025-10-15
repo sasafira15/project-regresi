@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 
-<h1 class="h3 mb-4 text-gray-800">Dashboard Admin</h1>
+<h1 class="h3 mb-4 text-gray-800">Dashboard mmm</h1>
 
 <?php if (session()->getFlashdata('message')): ?>
     <div class="alert alert-success"><?= session()->getFlashdata('message') ?></div>
