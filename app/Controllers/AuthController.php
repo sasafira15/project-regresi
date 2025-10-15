@@ -36,7 +36,6 @@ class AuthController extends BaseController
 
     if ($user) {
         // User ditemukan, verifikasi password
-        // PERUBAHAN DI SINI: dari $user['password'] menjadi $user['password_hash']
         if (password_verify($password, $user['password_hash'])) {
             // Password cocok, buat session
             $sessionData = [
@@ -52,7 +51,6 @@ class AuthController extends BaseController
             if ($user['role'] == 'admin') {
                 return redirect()->to('/admin/dashboard');
             } else {
-                // Semua role selain admin (misal: operator) akan ke dashboard user
                 return redirect()->to('/user/dashboard');
             }
         } else {
@@ -67,6 +65,7 @@ class AuthController extends BaseController
 
     public function logout()
     {
+        // Hapus session dan redirect ke halaman login
         $this->session->destroy();
         return redirect()->to('/login');
     }
