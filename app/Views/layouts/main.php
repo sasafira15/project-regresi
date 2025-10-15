@@ -33,25 +33,47 @@
                 <div class="sidebar-brand-text mx-3">Proyek Regresi</div>
             </a>
 
-            <hr class="sidebar-divider my-0">
+           <hr class="sidebar-divider my-0">
 
-            <li class="nav-item active">
-                <a class="nav-link" href="<?= site_url('admin/dashboard') ?>">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard Admin</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<?= site_url('user/dashboard') ?>">
-                    <i class="fas fa-fw fa-file-upload"></i>
-                    <span>Upload Operator</span></a>
-            </li>
+<?php if (session()->get('role') == 'admin'): ?>
 
-            <hr class="sidebar-divider">
+    <li class="nav-item active">
+        <a class="nav-link" href="<?= site_url('admin/dashboard') ?>">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span></a>
+    </li>
 
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
+    <hr class="sidebar-divider">
 
+    <div class="sidebar-heading">
+        Manajemen Data
+    </div>
+
+    <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('admin/data/create') ?>">
+            <i class="fas fa-fw fa-plus-circle"></i>
+            <span>Tambah Data Manual</span></a>
+
+    <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('admin/uploads') ?>">
+            <i class="fas fa-fw fa-file-import"></i>
+            <span>Kelola Upload</span></a>
+    </li>
+
+    <div class="sidebar-heading">
+        Pengaturan
+    </div>
+
+    <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Manajemen User</span></a>
+    </li>
+
+<?php endif; ?>
+
+
+<hr class="sidebar-divider">
         </ul>
         <div id="content-wrapper" class="d-flex flex-column">
 
