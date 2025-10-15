@@ -1,0 +1,17 @@
+.env
+
+/vendor
+
+# Folder cache, log, dan sesi CodeIgniter
+/writable/cache/*
+/writable/logs/*
+/writable/session/*
+/writable/uploads/*
+!/writable/uploads/index.html
+
+# File yang di-generate oleh IDE/editor
+.idea
+.vscode
+*.swp
+*~
+.DS_Store
