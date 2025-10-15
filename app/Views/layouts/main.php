@@ -26,54 +26,55 @@
 
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?= site_url('admin/dashboard') ?>">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center"
+                href="<?= site_url('admin/dashboard') ?>">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="sidebar-brand-text mx-3">Proyek Regresi</div>
             </a>
 
-           <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider my-0">
 
-<?php if (session()->get('role') == 'admin'): ?>
+            <?php if (session()->get('role') == 'admin'): ?>
 
-    <li class="nav-item active">
-        <a class="nav-link" href="<?= site_url('admin/dashboard') ?>">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span></a>
-    </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="<?= site_url('admin/dashboard') ?>">
+                        <i class="fas fa-fw fa-tachometer-alt"></i>
+                        <span>Dashboard</span></a>
+                </li>
 
-    <hr class="sidebar-divider">
+                <hr class="sidebar-divider">
 
-    <div class="sidebar-heading">
-        Manajemen Data
-    </div>
+                <div class="sidebar-heading">
+                    Manajemen Data
+                </div>
 
-    <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('admin/data/create') ?>">
-            <i class="fas fa-fw fa-plus-circle"></i>
-            <span>Tambah Data Manual</span></a>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= site_url('admin/data/create') ?>">
+                        <i class="fas fa-fw fa-plus-circle"></i>
+                        <span>Tambah Data Manual</span></a>
 
-    <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('admin/uploads') ?>">
-            <i class="fas fa-fw fa-file-import"></i>
-            <span>Kelola Upload</span></a>
-    </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= site_url('admin/uploads') ?>">
+                        <i class="fas fa-fw fa-file-import"></i>
+                        <span>Kelola Upload</span></a>
+                </li>
 
-    <div class="sidebar-heading">
-        Pengaturan
-    </div>
+                <div class="sidebar-heading">
+                    Pengaturan
+                </div>
 
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-fw fa-users"></i>
-            <span>Manajemen User</span></a>
-    </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-fw fa-users"></i>
+                        <span>Manajemen User</span></a>
+                </li>
 
-<?php endif; ?>
+            <?php endif; ?>
 
 
-<hr class="sidebar-divider">
+            <hr class="sidebar-divider">
         </ul>
         <div id="content-wrapper" class="d-flex flex-column">
 
@@ -115,7 +116,7 @@
                     <?= $this->renderSection('content') ?>
 
                 </div>
-                </div>
+            </div>
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
@@ -123,8 +124,8 @@
                     </div>
                 </div>
             </footer>
-            </div>
         </div>
+    </div>
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
@@ -139,7 +140,8 @@
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">Pilih "Logout" di bawah ini jika Anda siap untuk mengakhiri sesi Anda saat ini.</div>
+                <div class="modal-body">Pilih "Logout" di bawah ini jika Anda siap untuk mengakhiri sesi Anda saat ini.
+                </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Batal</button>
                     <a class="btn btn-primary" href="<?= site_url('logout') ?>">Logout</a>
@@ -154,6 +156,11 @@
     <script src="<?= base_url('assets/vendor/jquery-easing/jquery.easing.min.js') ?>"></script>
 
     <script src="<?= base_url('assets/js/sb-admin-2.min.js') ?>"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js"></script>
+
+
+    <?= $this->renderSection('page_scripts') ?>
 
 </body>
 
