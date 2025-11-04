@@ -4,7 +4,8 @@ use CodeIgniter\Router\RouteCollection;
 
 /**
  * @var RouteCollection $routes
- */// Halaman login
+ */
+// Halaman login
 $routes->get('/', 'AuthController::index');
 $routes->get('/login', 'AuthController::index');
 $routes->post('/login/process', 'AuthController::processLogin');
@@ -18,7 +19,13 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'AdminController::index');
     $routes->post('save', 'AdminController::saveData'); // Untuk form manual
     $routes->get('uploads', 'AdminController::uploadsList'); 
+    
+    // PERUBAHAN KRUSIAL ADA DI SINI:
+    // 1. Rute GET untuk proses (saat ini sudah ada)
     $routes->get('uploads/process/(:num)', 'AdminController::processUpload/$1');
+    // 2. MENAMBAHKAN RUTE POST UNTUK PROSES
+    $routes->post('uploads/process/(:num)', 'AdminController::processUpload/$1'); // <--- BARIS INI DITAMBAHKAN
+    
     $routes->get('uploads/delete/(:num)', 'AdminController::deleteUpload/$1');
     $routes->get('uploads/download/(:num)', 'AdminController::downloadFile/$1');
     $routes->get('data/create', 'AdminController::create');
@@ -37,6 +44,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 $routes->group('user', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'UserController::index');
     $routes->post('upload', 'UserController::uploadFile'); // Untuk upload file
+    // PERUBAHAN TIDAK DIBUTUHKAN DI SINI, HANYA FOKUS PADA GRUP 'admin'
     $routes->get('uploads/process/(:num)', 'AdminController::processUpload/$1');
 }); 
-
