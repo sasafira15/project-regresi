@@ -1,0 +1,76 @@
+Merge branch 'main' of https://github.com/sasafira15/project-regresi
+
+# Conflicts:
+#	app/Views/admin/dashboard.php
+#	writable/debugbar/debugbar_1760543959.707405.json
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please run
+#	git update-ref -d MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch and 'origin/main' have diverged,
+# and have 1 and 1 different commits each, respectively.
+#   (use "git pull" to merge the remote branch into yours)
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	modified:   app/Config/Autoload.php
+#	modified:   app/Config/Routes.php
+#	modified:   app/Controllers/AdminController.php
+#	new file:   app/Models/MesinModel.php
+#	modified:   app/Views/admin/dashboard.php
+#	modified:   app/Views/layouts/main.php
+#	modified:   composer.json
+#	new file:   composer.json.bak
+#	modified:   composer.lock
+#	modified:   public/index.php
+#	new file:   public/test_composer.php
+#	deleted:    writable/debugbar/debugbar_1760511775.788641.json
+#	new file:   writable/debugbar/debugbar_1760517055.446679.json
+#	new file:   writable/debugbar/debugbar_1760517055.886714.json
+#	new file:   writable/debugbar/debugbar_1760517068.095259.json
+#	new file:   writable/debugbar/debugbar_1760517236.905919.json
+#	new file:   writable/debugbar/debugbar_1760517350.869492.json
+#	new file:   writable/debugbar/debugbar_1760517355.219273.json
+#	new file:   writable/debugbar/debugbar_1760517381.736874.json
+#	new file:   writable/debugbar/debugbar_1760519650.174055.json
+#	new file:   writable/debugbar/debugbar_1760519653.306965.json
+#	new file:   writable/debugbar/debugbar_1760519658.044019.json
+#	new file:   writable/debugbar/debugbar_1760528921.874045.json
+#	new file:   writable/debugbar/debugbar_1760528930.302881.json
+#	new file:   writable/debugbar/debugbar_1760528930.740990.json
+#	new file:   writable/debugbar/debugbar_1760528938.179455.json
+#	new file:   writable/debugbar/debugbar_1760529050.836769.json
+#	new file:   writable/debugbar/debugbar_1760529053.537720.json
+#	new file:   writable/debugbar/debugbar_1760529121.009769.json
+#	new file:   writable/debugbar/debugbar_1760530881.404502.json
+#	new file:   writable/debugbar/debugbar_1760542747.707264.json
+#	new file:   writable/debugbar/debugbar_1760542775.350976.json
+#	new file:   writable/debugbar/debugbar_1760542906.928414.json
+#	new file:   writable/debugbar/debugbar_1760542915.416887.json
+#	new file:   writable/debugbar/debugbar_1760542945.493073.json
+#	new file:   writable/debugbar/debugbar_1760542946.565181.json
+#	new file:   writable/debugbar/debugbar_1760542948.196012.json
+#	new file:   writable/debugbar/debugbar_1760543074.192541.json
+#	new file:   writable/debugbar/debugbar_1760543805.234702.json
+#	new file:   writable/debugbar/debugbar_1760543806.160667.json
+#	new file:   writable/debugbar/debugbar_1760543825.127182.json
+#	new file:   writable/debugbar/debugbar_1760543841.281983.json
+#	new file:   writable/debugbar/debugbar_1760543862.872200.json
+#	new file:   writable/debugbar/debugbar_1760543874.875035.json
+#	new file:   writable/debugbar/debugbar_1760543888.347425.json
+#	new file:   writable/debugbar/debugbar_1760543889.294925.json
+#	new file:   writable/debugbar/debugbar_1760543918.943608.json
+#	new file:   writable/debugbar/debugbar_1760543959.707405.json
+#	new file:   writable/debugbar/debugbar_1760543968.655887.json
+#	new file:   writable/debugbar/debugbar_1760543972.028619.json
+#	new file:   writable/debugbar/debugbar_1760544288.062525.json
+#	new file:   writable/debugbar/debugbar_1760544293.189342.json
+#
