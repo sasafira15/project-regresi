@@ -6,7 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\UploadModel;
 use App\Models\DataEnergyModel;
 use App\Models\RegresiResultModel;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\IOFactory; // PENTING: Untuk membaca Excel/CSV
 
 class UserController extends BaseController
 {
@@ -24,118 +24,133 @@ class UserController extends BaseController
 
     /**
      * Method untuk memproses file upload, ekstraksi data, dan perhitungan regresi.
-     * Mengimplementasikan langkah 2, 3, 4, 5, dan 6.
+     * Mengimplementasikan penanganan error (try-catch) dan validasi data.
      */
     public function upload()
     {
         // 1. Ambil File dari Request
         $file = $this->request->getFile('excel_file');
         
-        // Cek apakah file valid dan tidak ada error
         if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('error', 'File tidak valid atau terjadi kesalahan.');
+            return redirect()->back()->with('error', 'File tidak valid atau terjadi kesalahan upload.');
         }
 
         // 2. Tentukan Direktori dan Pindahkan File (Langkah 2)
         $fileName = $file->getClientName();
         $originalName = pathinfo($fileName, PATHINFO_FILENAME);
         $fileExt = $file->getClientExtension();
-        $newFileName = $file->getRandomName(); // Nama unik untuk keamanan
-        $uploadPath = WRITEPATH . 'uploads/'; // Direktori penyimpanan di server
+        $newFileName = $file->getRandomName(); 
+        $uploadPath = WRITEPATH . 'uploads/'; 
 
-        // Pindahkan file dari temp ke direktori penyimpanan
-        $file->move($uploadPath, $newFileName);
+        // --- Pindahkan file ke penyimpanan permanen ---
+        if (!$file->move($uploadPath, $newFileName)) {
+            // Kegagalan memindahkan file (misal: izin folder salah) ditangani di luar try-catch
+            return redirect()->back()->with('error', 'Gagal memindahkan file ke server. Cek izin folder uploads.');
+        }
 
-        $uploadedBy = session()->get('id'); // Ambil ID pengguna dari sesi
+        $uploadedBy = session()->get('id'); 
 
-        // Simpan metadata upload ke tb_uploads
+        // Simpan metadata upload ke tb_uploads (Status Awal: pending)
+        // Insert ini harus terjadi sebelum try-catch agar kita punya $uploadId untuk diupdate jika terjadi error
         $uploadData = [
             'filename' => $newFileName,
             'filepath' => $uploadPath . $newFileName,
             'original_name' => $originalName . '.' . $fileExt,
             'uploaded_by' => $uploadedBy,
             'status' => 'pending',
-            // 'row_count' akan diupdate setelah proses selesai
         ];
         $this->uploadModel->insert($uploadData);
         $uploadId = $this->uploadModel->getInsertID();
 
-        // ----------------------------------------------------
-        // LANGKAH 3: EKSTRAKSI DAN LANGKAH 4: PENYIMPANAN DATA
-        // ----------------------------------------------------
-        
-        $reader = IOFactory::createReaderForFile($uploadPath . $newFileName);
-        $spreadsheet = $reader->load($uploadPath . $newFileName);
-        $worksheet = $spreadsheet->getActiveSheet();
-        $rows = $worksheet->toArray();
-        $dataToInsert = [];
-        $totalRows = 0;
+        // ------------------------------------------------------------------
+        // PENANGANAN ERROR DIMULAI: Melindungi Langkah 3-6 (Proses Berat)
+        // ------------------------------------------------------------------
+        try {
+            // LANGKAH 3: EKSTRAKSI DAN LANGKAH 4: PENYIMPANAN DATA
+            
+            $reader = IOFactory::createReaderForFile($uploadPath . $newFileName);
+            $spreadsheet = $reader->load($uploadPath . $newFileName);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+            $dataToInsert = [];
+            $totalRows = 0;
 
-        // Asumsi: Baris pertama adalah header, data dimulai dari baris ke-2 (indeks 1)
-        if (count($rows) > 1) {
-            foreach ($rows as $index => $row) {
-                if ($index == 0) continue; // Lewati header
+            if (count($rows) > 1) {
+                foreach ($rows as $index => $row) {
+                    if ($index == 0) continue; // Lewati header
 
-                // Asumsi Struktur Excel:
-                // Kolom A (Index 0): Bulan/Periode (Variabel X)
-                // Kolom B (Index 1): Konsumsi Energi (Variabel Y)
-                
-                // Lakukan validasi data di sini (misal: cek format bulan, pastikan numerik)
-                
-                $dataToInsert[] = [
-                    'upload_id' => $uploadId, // FK ke tb_uploads
-                    'bulan' => $row[0], 
-                    'konsumsi_energi' => (float) $row[1], 
-                    // Tambahkan kolom lain jika ada
-                ];
-                $totalRows++;
+                    // --- VALIDASI DATA LEBIH KUAT ---
+                    // Pastikan Konsumsi Energi (Y) adalah float
+                    $konsumsi = filter_var($row[1], FILTER_VALIDATE_FLOAT);
+                    // Pastikan Bulan/Periode (X) adalah float/integer untuk perhitungan regresi
+                    $bulan = filter_var($row[0], FILTER_VALIDATE_FLOAT); 
+
+                    // Cek validitas Konsumsi Energi
+                    if ($konsumsi === false || $konsumsi === null || $konsumsi < 0) {
+                        throw new \Exception("Data Konsumsi Energi pada baris Excel ke-" . ($index + 1) . " tidak valid (harus angka positif).");
+                    }
+                    
+                    // Cek validitas Bulan/Periode
+                    if ($bulan === false || $bulan === null) {
+                        throw new \Exception("Data Bulan/Periode pada baris Excel ke-" . ($index + 1) . " tidak valid (harus angka).");
+                    }
+                    
+                    $dataToInsert[] = [
+                        'upload_id' => $uploadId, 
+                        'bulan' => $bulan, 
+                        'konsumsi_energi' => $konsumsi, 
+                    ];
+                    $totalRows++;
+                }
             }
-        }
 
-        if (!empty($dataToInsert)) {
-            // Bulk insert data ke tb_data_energy
-            $this->dataEnergyModel->insertBatch($dataToInsert);
+            if (!empty($dataToInsert)) {
+                // Bulk insert data ke tb_data_energy
+                $this->dataEnergyModel->insertBatch($dataToInsert);
+                
+                // Update row_count di tb_uploads
+                $this->uploadModel->update($uploadId, ['row_count' => $totalRows]);
+
+                // LANGKAH 5: PERHITUNGAN REGRESI
+                $energyData = $this->dataEnergyModel->where('upload_id', $uploadId)->findAll();
+                
+                $X = array_column($energyData, 'bulan'); 
+                $Y = array_column($energyData, 'konsumsi_energi'); 
+
+                $regresiResult = $this->calculateLinearRegression($X, $Y);
+
+                // LANGKAH 6: PENYIMPANAN HASIL REGRESI
+                $regresiData = [
+                    'upload_id' => $uploadId,
+                    'slope_b1' => $regresiResult['slope'],
+                    'intercept_b0' => $regresiResult['intercept'],
+                    'rsquare' => $regresiResult['r_squared'],
+                    'status' => 'completed',
+                ];
+                $this->regresiResultModel->insert($regresiData);
+                
+                // FINAL: Update status upload menjadi 'processed'
+                $this->uploadModel->update($uploadId, ['status' => 'processed']);
+
+                return redirect()->back()->with('message', "File {$fileName} berhasil diunggah, data diimpor ({$totalRows} baris), dan hasil regresi telah dihitung!");
+
+            } else {
+                // Jika tidak ada data ditemukan dalam file
+                throw new \Exception('Gagal mengimpor data. File mungkin kosong atau hanya berisi header.');
+            }
+        
+        } catch (\Exception $e) {
+            // 🚨 JIKA TERJADI ERROR DI DALAM BLOK TRY
             
-            // Update row_count di tb_uploads
-            $this->uploadModel->update($uploadId, ['row_count' => $totalRows]);
-
-            // ----------------------------------------------------
-            // LANGKAH 5: PERHITUNGAN REGRESI
-            // ----------------------------------------------------
-            
-            // Ambil data yang baru saja diimpor untuk perhitungan
-            $energyData = $this->dataEnergyModel->where('upload_id', $uploadId)->findAll();
-            
-            // Siapkan array X dan Y
-            $X = array_column($energyData, 'bulan'); // Variabel Bebas (X)
-            $Y = array_column($energyData, 'konsumsi_energi'); // Variabel Terikat (Y)
-
-            // Jalankan fungsi regresi (Lihat fungsi di bawah)
-            $regresiResult = $this->calculateLinearRegression($X, $Y);
-
-            // ----------------------------------------------------
-            // LANGKAH 6: PENYIMPANAN HASIL REGRESI
-            // ----------------------------------------------------
-            
-            $regresiData = [
-                'upload_id' => $uploadId,
-                'slope_b1' => $regresiResult['slope'],
-                'intercept_b0' => $regresiResult['intercept'],
-                'rsquare' => $regresiResult['r_squared'],
-                'status' => 'completed',
-                // Tambahkan kolom hasil regresi lain jika ada
-            ];
-            $this->regresiResultModel->insert($regresiData);
-            
-            // Update status upload menjadi 'processed'
-            $this->uploadModel->update($uploadId, ['status' => 'processed']);
-
-            return redirect()->back()->with('message', "File {$fileName} berhasil diunggah, data diimpor ({$totalRows} baris), dan hasil regresi telah dihitung!");
-
-        } else {
-            // Jika tidak ada data ditemukan dalam file
+            // 1. Update status di database menjadi 'failed'
+            // Memastikan status upload tidak terjebak di 'pending'
             $this->uploadModel->update($uploadId, ['status' => 'failed']);
-            return redirect()->back()->with('error', 'Gagal mengimpor data. File mungkin kosong atau format tidak sesuai.');
+            
+            // 2. Log error untuk debugging
+            log_message('error', 'Upload/Processing Error for ID ' . $uploadId . ': ' . $e->getMessage());
+
+            // 3. Kembalikan ke halaman sebelumnya dengan pesan error
+            return redirect()->back()->with('error', 'Pemrosesan gagal: ' . $e->getMessage());
         }
     }
 
@@ -147,7 +162,8 @@ class UserController extends BaseController
         $n = count($X);
 
         if ($n < 2) {
-             return ['slope' => 0, 'intercept' => 0, 'r_squared' => 0];
+            // Minimal 2 titik data untuk regresi
+            return ['slope' => 0, 'intercept' => 0, 'r_squared' => 0];
         }
 
         $sumX = array_sum($X);
@@ -155,6 +171,7 @@ class UserController extends BaseController
         $sumXY = 0;
         $sumXX = 0;
 
+        // Hitung sumXY dan sumXX
         for ($i = 0; $i < $n; $i++) {
             $sumXY += ($X[$i] * $Y[$i]);
             $sumXX += ($X[$i] * $X[$i]);
@@ -168,7 +185,7 @@ class UserController extends BaseController
         $denominatorB1 = ($n * $sumXX) - ($sumX * $sumX);
         
         if ($denominatorB1 == 0) {
-            // Mencegah pembagian dengan nol (biasanya terjadi jika semua nilai X sama)
+            // Mencegah pembagian dengan nol
             $B1 = 0; 
         } else {
             $B1 = $numeratorB1 / $denominatorB1;
@@ -188,6 +205,9 @@ class UserController extends BaseController
         }
 
         $r_squared = ($SST == 0) ? 0 : $SSR / $SST;
+
+        // Batasi nilai R-squared antara 0 dan 1 (untuk menangani floating point error kecil)
+        $r_squared = max(0, min(1, $r_squared));
 
         return [
             'slope' => $B1,
