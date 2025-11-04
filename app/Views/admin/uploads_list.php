@@ -54,11 +54,17 @@
                                     </a>
 
                                     <?php if ($upload['status'] == 'pending'): ?>
-                                        <a href="<?= site_url('admin/uploads/process/' . $upload['id']) ?>" 
-                                           class="btn btn-success btn-sm mr-2" 
-                                           title="Proses File">
-                                            <i class="fas fa-cogs"></i>
-                                        </a>
+                                        <!-- START: Perubahan menggunakan FORM untuk menghindari masalah klik -->
+                                        <form method="post" action="<?= site_url('admin/uploads/process/' . $upload['id']) ?>" style="display:inline-block;">
+                                            <!-- Tombol Proses sekarang menjadi SUBMIT button -->
+                                            <button type="submit" 
+                                                    class="btn btn-success btn-sm mr-2" 
+                                                    title="Proses File dan Simpan Data"
+                                                    onclick="return confirm('Apakah Anda yakin ingin memproses file ini? Data akan disimpan ke database utama.')">
+                                                <i class="fas fa-cogs"></i>
+                                            </button>
+                                        </form>
+                                        <!-- END: Perubahan menggunakan FORM -->
                                     <?php endif; ?>
 
                                     <a href="<?= site_url('admin/uploads/delete/' . $upload['id']) ?>" 
