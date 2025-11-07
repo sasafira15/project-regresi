@@ -1,10 +1,10 @@
-<?php
+?php
 
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\DataEnergyModel; 
-use App\Models\UploadModel;
+use App\Models\UploadModel; // Pastikan ini ada
 use App\Models\MesinModel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -19,19 +19,53 @@ class AdminController extends BaseController
 {
     public function __construct()
     {
-        $this->session = \Config\Services::session();
-        // Inisialisasi model di constructor agar bisa diakses di semua method, termasuk processUpload
-        $this->uploadModel = new UploadModel();
-        $this->dataEnergyModel = new DataEnergyModel();
+        // Pertahankan hanya inisialisasi session jika Anda menggunakannya di semua method
+        $this->session = \Config\Services::session(); 
+        // Hapus inisialisasi model di sini untuk mengatasi error "Controller method not found: Index"
+    }
+
+    // Menampilkan dashboard admin (form + tabel data)
+    public function index()
+    {
+        $energyModel = new DataEnergyModel();
+        $mesinModel = new MesinModel();
+        // ... (sisanya tidak berubah)
+        $allEnergyData = $energyModel->orderBy('week_label', 'ASC')->findAll();
+        $uniqueWeeks = $energyModel->distinct()->findColumn('week_label') ?? [];
+        
+        $chartData = [];
+        foreach ($allEnergyData as $row) {
+            // Pastikan data tidak null
+            if ($row['total_produksi'] !== null && $row['energy_kwh'] !== null) {
+                // Format yang dibutuhkan Chart.js: {x: ..., y: ...}
+                $chartData[] = [
+                    'x' => (float)$row['total_produksi'], 
+                    'y' => (float)$row['energy_kwh']
+                ];
+            }
+        }
+
+        $data = [
+            'username'      => session()->get('username'),
+            'list_mesin'    => $mesinModel->findAll(),
+            'chart_data'    => json_encode($chartData),
+            'unique_weeks'  => $uniqueWeeks, // Kirim data sebagai JSON
+        ];
+
+        return view('admin/dashboard', $data);
     }
     
-    // ... (method index, saveData, downloadLaporanMingguan, tambahMesin, downloadLaporan, hapusMesin, create, uploadsList, deleteUpload, downloadFile, edit, update, delete, lainnya di sini)
+    // ... (method saveData, downloadLaporanMingguan, dll.)
 
-    // Memproses data dari file upload berdasarkan upload_id
+    // Memproses data dari file upload berdasarkan upload_id (FUNGSI REVISI)
     public function processUpload($uploadId)
     {
+        // Pindahkan inisialisasi model ke dalam fungsi ini
+        $uploadModel = new UploadModel();
+        $dataEnergyModel = new DataEnergyModel();
+
         // 1. Ambil data upload
-        $upload = $this->uploadModel->find($uploadId);
+        $upload = $uploadModel->find($uploadId);
 
         if (!$upload || $upload['status'] !== 'pending') {
             return redirect()->back()->with('error', 'File tidak ditemukan atau sudah diproses.');
@@ -56,7 +90,7 @@ class AdminController extends BaseController
             // Hapus baris header (asumsi baris 1 adalah header)
             unset($sheetData[1]); 
 
-            $this->dataEnergyModel->db->transBegin(); // Mulai transaksi DB
+            $dataEnergyModel->db->transBegin(); // Mulai transaksi DB
 
             $adminId = $this->session->get('user_id') ?? 1; 
 
@@ -65,12 +99,7 @@ class AdminController extends BaseController
             foreach ($sheetData as $row) {
                 // ASUMSI URUTAN KOLOM EXCEL ANDA:
                 // A: week_label, B: driver_m, C: driver_ton, D: total_produksi, 
-                // E: energy_kwh (Revisi: jika energy_wh tidak ada, Energy_kwh harusnya di kolom E)
-                // F: notes (Jika ada 6 kolom)
-                
-                // Pastikan indeks kolom sesuai dengan file Excel Anda.
-                // Jika Energy_kwh ada di kolom E dan tidak ada kolom Energy_wh, 
-                // Anda hanya perlu menyesuaikan pemetaan di sini.
+                // E: energy_kwh, F: notes (Jika ada)
 
                 $weekLabel = trim($row['A'] ?? '');
                 
@@ -80,18 +109,17 @@ class AdminController extends BaseController
                 $totalProduksi = (float)($row['D'] ?? 0);
                 $energyKwh = (float)($row['E'] ?? 0); // Asumsi Energy_kwh di kolom E
                 
-                // Jika kolom F di Excel Anda adalah NOTES, gunakan indeks F.
                 $notes = $row['F'] ?? ''; 
 
                 // Hanya proses baris jika week_label tidak kosong DAN energy_kwh > 0
                 if (!empty($weekLabel) && $energyKwh > 0) {
                     $dataToInsert[] = [
-                        'uploaded_file_id' => $uploadId, 
+                        // Pastikan kolom ini sesuai dengan field di DataEnergyModel (seharusnya upload_id)
+                        'upload_id' => $uploadId, 
                         'week_label' => $weekLabel,
                         'driver_m' => $driverM,
                         'driver_ton' => $driverTon,
                         'total_produksi' => $totalProduksi,
-                        // 'energy_wh' tetap NULL/0 jika kolomnya tidak ada di Excel
                         'energy_kwh' => $energyKwh, 
                         'notes' => $notes,
                         'created_by' => $adminId, 
@@ -103,18 +131,18 @@ class AdminController extends BaseController
 
             if (!empty($dataToInsert)) {
                 // Gunakan insertBatch untuk performa yang lebih baik
-                $this->dataEnergyModel->insertBatch($dataToInsert);
+                $dataEnergyModel->insertBatch($dataToInsert);
             }
 
 
-            if ($this->dataEnergyModel->db->transStatus() === false) {
-                $this->dataEnergyModel->db->transRollback();
+            if ($dataEnergyModel->db->transStatus() === false) {
+                $dataEnergyModel->db->transRollback();
                 throw new \Exception('Gagal memproses data. Terjadi kesalahan pada transaksi database.');
             } else {
-                $this->dataEnergyModel->db->transCommit();
+                $dataEnergyModel->db->transCommit();
                 
                 // 3. Update status setelah semua data berhasil di-insert
-                $this->uploadModel->update($uploadId, [
+                $uploadModel->update($uploadId, [
                     'status' => 'processed',
                     'processed_at' => Time::now()->toDateTimeString(),
                     'row_count' => $rows_processed 
@@ -125,12 +153,12 @@ class AdminController extends BaseController
 
         } catch (\Exception $e) {
             // Rollback jika ada error
-            if ($this->dataEnergyModel->db->transStatus() !== false) {
-                 $this->dataEnergyModel->db->transRollback();
+            if ($dataEnergyModel->db->transStatus() !== false) {
+                 $dataEnergyModel->db->transRollback();
             }
             
             // Update status menjadi failed jika terjadi error
-             $this->uploadModel->update($uploadId, [
+             $uploadModel->update($uploadId, [
                 'status' => 'failed',
                 'notes' => 'Error: ' . substr($e->getMessage(), 0, 250)
             ]);
@@ -139,4 +167,5 @@ class AdminController extends BaseController
             return redirect()->to('admin/uploads')->with('error', 'Gagal memproses file: ' . $e->getMessage());
         }
     }
+    // ... (method uploadsList, deleteUpload, dll.)
 }
