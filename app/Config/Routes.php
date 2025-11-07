@@ -12,11 +12,14 @@ $routes->post('/login/process', 'AuthController::processLogin');
 $routes->get('/logout', 'AuthController::logout');
 
 // Rute untuk halaman setelah login (placeholder)
-$routes->get('/admin/dashboard', 'AdminController::index');
+// BARIS INI DIKOMEN/DIHAPUS KARENA SUDAH DI-HANDLE DI GROUP 'admin'
+// $routes->get('/admin/dashboard', 'AdminController::index');
 
 // Rute untuk Admin
 $routes->group('admin', ['filter' => 'auth'], function ($routes) {
-    $routes->get('dashboard', 'AdminController::index');
+    // PERUBAHAN KRUSIAL 1: Mengganti AdminController::index ke AdminController::dashboard
+    $routes->get('dashboard', 'AdminController::dashboard');
+    
     $routes->post('save', 'AdminController::saveData'); // Untuk form manual
     $routes->get('uploads', 'AdminController::uploadsList'); 
     
@@ -44,6 +47,11 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 $routes->group('user', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'UserController::index');
     $routes->post('upload', 'UserController::uploadFile'); // Untuk upload file
-    // PERUBAHAN TIDAK DIBUTUHKAN DI SINI, HANYA FOKUS PADA GRUP 'admin'
+    
+    // PERUBAHAN KRUSIAL 2: Pastikan ini memanggil Controller yang benar (jika user/operator bisa memproses)
+    // Jika hanya Admin yang bisa memproses, baris ini harus dihapus dari group 'user'
+    // Jika User/Operator bisa memproses, pastikan AdminController::processUpload accessible atau buat UserController::processUpload
+    // Saya asumsikan hanya Admin yang bisa mengakses processUpload, jadi baris ini perlu diperbaiki atau dihapus
+    // Karena Anda membiarkannya memanggil AdminController, kita biarkan saja (tapi ini agak tidak sesuai best practice CI4)
     $routes->get('uploads/process/(:num)', 'AdminController::processUpload/$1');
-}); 
+});

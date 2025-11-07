@@ -6,7 +6,6 @@ use App\Controllers\BaseController;
 use App\Models\DataEnergyModel; 
 use App\Models\UploadModel; 
 use App\Models\MesinModel;
-use app\Controllers\AdminControllerphp;
 use PhpOffice\PhpSpreadsheet\IOFactory; // Diperlukan untuk membaca Excel
 use Phpml\Regression\SimpleLinearRegression; // Diperlukan untuk Regresi
 use Phpml\Metric\Regression; // Diperlukan untuk menghitung R-squared
